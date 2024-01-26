@@ -1,0 +1,57 @@
+function fetchDataAndWriteDate() {
+
+    var apiUrl = "https://rossijskoedvizhe.helpdeskeddy.com/api/v2/tickets/?page=21&status_list=v-processe,open&department_list=2,4,5,8&from_date_created=2015-10-26 00:00:00&to_date_updated=2023-10-26 23:59:59";
+    
+
+    var response = sendRequest("GET", apiUrl, {}, "", "");
+    
+
+    if (response.data && response.data.tickets) {
+
+      var tickets = response.data.tickets;
+      
+
+      var sheet = SpreadsheetApp.getActiveSpreadsheet().getActiveSheet();
+      
+
+      var ticketIds = sheet.getRange(1, 1, sheet.getLastRow(), 1).getValues();
+      
+
+      var closingDates = {};
+      
+
+      tickets.forEach(function(ticket) {
+
+        var ticketIndex = ticketIds.indexOf(ticket.id.toString());
+        if (ticketIndex !== -1) {
+          var closingDate = ticket.closed_at || "Не закрыт";
+          
+          closingDates[ticket.id] = closingDate;
+        }
+      });
+      
+      for (var i = 0; i < ticketIds.length; i++) {
+        var ticketId = ticketIds[i][0];
+        var closingDate = closingDates[ticketId] || "Не найден";
+        sheet.getRange(i + 1, 2).setValue(closingDate);
+      }
+      
+      Logger.log("Даты закрытия тикетов успешно записаны.");
+    } else {
+      Logger.log("Ошибка при получении данных.");
+    }
+  }
+  
+  function sendRequest(method, url, payload, action, ticketId) {
+    // Пример
+    // var response = UrlFetchApp.fetch(url, {
+    //   method: method,
+    //   payload: JSON.stringify(payload),
+    //   contentType: "application/json",
+    //   headers: {
+    //     "Authorization": "Bearer YOUR_ACCESS_TOKEN"
+    //   }
+    // });
+    // return JSON.parse(response.getContentText());
+  }
+  
